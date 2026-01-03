@@ -4,6 +4,13 @@
 
     <!-- REQUIRED for Retrofit / API calls -->
     <uses-permission android:name="android.permission.INTERNET" />
+    
+    <!-- Permissions for Enable Permissions Screen -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
 
     <application
         android:allowBackup="true"
@@ -15,6 +22,10 @@
         android:supportsRtl="true"
         android:usesCleartextTraffic="true"
         android:theme="@style/Theme.SkillMatchV3">
+        
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyCfH8k4nxlwUYrd2awmQHLNiyekgYCmpDg" />
 
         <activity
             android:name=".MainActivity"

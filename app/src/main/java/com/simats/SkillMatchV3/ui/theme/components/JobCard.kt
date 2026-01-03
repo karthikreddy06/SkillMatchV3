@@ -8,11 +8,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.simats.SkillMatchV3.network.Job
+import com.simats.SkillMatchV3.ui.model.JobUiModel
 
 @Composable
 fun JobCard(
-    job: Job,
+    job: JobUiModel,
     onClick: () -> Unit
 ) {
     Card(

@@ -5,6 +5,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.simats.SkillMatchV3.ui.model.JobUiModel
 
 @Composable
 fun FindJobsNearbyScreen(
@@ -28,7 +29,9 @@ fun FindJobsNearbyScreen(
                         company = "Swiggy",
                         location = "Hyderabad",
                         salary = "₹15k - ₹20k",
-                        description = "Deliver food orders to nearby customers."
+                        description = "Deliver food orders to nearby customers.",
+                        latitude = 17.3850,
+                        longitude = 78.4867
                     )
                 )
             }

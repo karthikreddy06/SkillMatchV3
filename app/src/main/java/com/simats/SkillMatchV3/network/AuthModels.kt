@@ -34,7 +34,7 @@ data class RegisterRequest(
     val email: String,
     val phone: String,
     val password: String,
-    val role: String = "com/simats/SkillMatchV3/ui/theme/screens/seeker"
+    val role: String = "seeker"
 )
 
 data class RegisterResponse(

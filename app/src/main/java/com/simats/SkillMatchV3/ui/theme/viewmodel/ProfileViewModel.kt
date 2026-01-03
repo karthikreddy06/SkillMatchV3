@@ -1,46 +1,60 @@
 package com.simats.SkillMatchV3.ui.theme.viewmodel
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.simats.SkillMatchV3.network.ApiClient
 import com.simats.SkillMatchV3.network.ApiService
+import com.simats.SkillMatchV3.network.GenericResponse
 import com.simats.SkillMatchV3.network.UpdateProfileRequest
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class ProfileViewModel : ViewModel() {
 
-    var isLoading by mutableStateOf(false)
-    var message by mutableStateOf<String?>(null)
+    private val _loading = MutableStateFlow(false)
+    val loading: StateFlow<Boolean> = _loading
+
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error
+
+    private val _success = MutableStateFlow(false)
+    val success: StateFlow<Boolean> = _success
 
     fun updateProfile(
         token: String,
-        name: String,
-        phone: String
+        request: UpdateProfileRequest
     ) {
-        viewModelScope.launch {
-            isLoading = true
-            try {
-                // Fix: Create the ApiService instance from Retrofit
-                val apiService = ApiClient.retrofit.create(ApiService::class.java)
+        _loading.value = true
+        _error.value = null
+        _success.value = false
 
-                val response = apiService.updateProfile(
-                    token = "Bearer $token", // Ensure "Bearer " is included if not added elsewhere
-                    request = UpdateProfileRequest(
-                        name = name,
-                        phone = phone,
-                        latitude = null,
-                        longitude = null
-                    )
-                )
-                message = response.message
-            } catch (e: Exception) {
-                e.printStackTrace()
-                message = "Update failed: ${e.localizedMessage}"
-            }
-            isLoading = false
-        }
+        val api = ApiClient.retrofit.create(ApiService::class.java)
+
+        api.updateProfile("Bearer $token", request)
+            .enqueue(object : Callback<GenericResponse> {
+
+                override fun onResponse(
+                    call: Call<GenericResponse>,
+                    response: Response<GenericResponse>
+                ) {
+                    _loading.value = false
+
+                    if (response.isSuccessful && response.body()?.status == true) {
+                        _success.value = true
+                    } else {
+                        _error.value =
+                            response.body()?.message ?: "Profile update failed"
+                    }
+                }
+
+                override fun onFailure(call: Call<GenericResponse>, t: Throwable) {
+                    _loading.value = false
+                    _error.value = t.localizedMessage ?: "Network error"
+                }
+            })
     }
 }

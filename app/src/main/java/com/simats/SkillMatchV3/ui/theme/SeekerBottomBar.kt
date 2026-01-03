@@ -35,12 +35,16 @@ private fun RowScope.BottomItem(
     NavigationBarItem(
         selected = currentRoute == route,
         onClick = {
-            navController.navigate(route) {
-                popUpTo(NavRoutes.SEEKER_HOME) {
-                    saveState = true
+            // 5️⃣ SeekerBottomBar.kt (STOP SCREEN KILLING)
+            // Use SAME seekerNavController, No custom back handling, No popUpTo(route)
+            if (currentRoute != route) {
+                navController.navigate(route) {
+                    popUpTo(navController.graph.startDestinationId) {
+                        saveState = true
+                    }
+                    launchSingleTop = true
+                    restoreState = true
                 }
-                launchSingleTop = true
-                restoreState = true
             }
         },
         icon = { Icon(icon, contentDescription = label) },

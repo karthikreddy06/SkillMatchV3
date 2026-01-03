@@ -10,6 +10,11 @@ data class SkillsListResponse(
     val skills: List<Skill>
 )
 
-data class UpdateSkillsRequest(
-    val skill_ids: List<Int>
+data class AddSkillRequest(
+    val name: String
+)
+
+data class AddSkillResponse(
+    val status: Boolean,
+    val skill: Skill
 )

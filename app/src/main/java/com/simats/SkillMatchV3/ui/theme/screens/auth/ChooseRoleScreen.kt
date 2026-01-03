@@ -26,11 +26,12 @@ fun ChooseRoleScreen(navController: NavHostController) {
         Text("Choose Your Role", style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(32.dp))
 
+        // SEEKER BUTTON
         Button(
             modifier = Modifier.fillMaxWidth(),
             onClick = {
-                prefManager.setRole("com/simats/SkillMatchV3/ui/theme/screens/seeker")
-                navController.navigate(NavRoutes.REGISTER)
+                prefManager.setRole("seeker")
+                navController.navigate(NavRoutes.LOGIN)
             }
         ) {
             Text("Job Seeker")
@@ -38,11 +39,12 @@ fun ChooseRoleScreen(navController: NavHostController) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // EMPLOYER BUTTON
         Button(
             modifier = Modifier.fillMaxWidth(),
             onClick = {
-                prefManager.setRole("employer")
-                navController.navigate(NavRoutes.REGISTER)
+                prefManager.setRole("employer") // ✅ Fixed: "employer", not a file path
+                navController.navigate(NavRoutes.LOGIN)
             }
         ) {
             Text("Employer")

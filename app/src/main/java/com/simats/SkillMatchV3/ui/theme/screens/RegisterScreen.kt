@@ -14,6 +14,7 @@ import com.simats.SkillMatchV3.network.ApiClient
 import com.simats.SkillMatchV3.network.ApiService
 import com.simats.SkillMatchV3.network.RegisterRequest
 import com.simats.SkillMatchV3.network.RegisterResponse
+import com.simats.SkillMatchV3.utils.PrefManager
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -22,6 +23,11 @@ import retrofit2.Response
 fun RegisterScreen(navController: NavHostController) {
 
     val context = LocalContext.current
+    val prefManager = remember { PrefManager(context) }
+    
+    // Retrieve role selected in ChooseRoleScreen
+    // Default to "seeker" if somehow null, though ChooseRoleScreen sets it
+    val selectedRole = prefManager.getRole() ?: "seeker"
 
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -38,7 +44,7 @@ fun RegisterScreen(navController: NavHostController) {
         verticalArrangement = Arrangement.Center
     ) {
 
-        Text("Register", style = MaterialTheme.typography.headlineMedium)
+        Text("Register as $selectedRole", style = MaterialTheme.typography.headlineMedium)
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -86,7 +92,8 @@ fun RegisterScreen(navController: NavHostController) {
                     name = name,
                     email = email,
                     phone = phone,
-                    password = password
+                    password = password,
+                    role = selectedRole // Include the role in registration
                 )
 
                 api.register(request).enqueue(object : Callback<RegisterResponse> {

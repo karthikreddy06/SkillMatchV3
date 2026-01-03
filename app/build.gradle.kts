@@ -56,21 +56,29 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
 
-    // Icons (Added this)
+    // Icons
     implementation("androidx.compose.material:material-icons-extended")
 
-    // Navigation (Compose)
+    // Navigation
     implementation("androidx.navigation:navigation-compose:2.7.7")
+
+    // Google Maps
+    implementation("com.google.maps.android:maps-compose:4.4.1")
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
+
+    // Volley
+    implementation("com.android.volley:volley:1.2.1")
 
     // Debug & Testing
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation("androidx.compose.foundation:foundation:1.6.8")
-    implementation("androidx.compose.foundation:foundation:1.5.4")
+    
     // Retrofit
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
     implementation("com.google.accompanist:accompanist-flowlayout:0.32.0")
+    
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

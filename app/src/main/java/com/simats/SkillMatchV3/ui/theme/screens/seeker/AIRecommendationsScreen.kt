@@ -1,211 +1,183 @@
-package com.simats.SkillMatchV3.ui.screens.seeker
+package com.simats.SkillMatchV3.ui.theme.screens.seeker
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import com.simats.SkillMatchV3.network.ApiClient
+import com.simats.SkillMatchV3.network.ApiService
+import com.simats.SkillMatchV3.network.RecommendedJobsResponse
+import com.simats.SkillMatchV3.ui.model.JobUiModel
+import com.simats.SkillMatchV3.utils.PrefManager
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 @Composable
-fun AIRecommendationsScreen(
-    onJobClick: (JobUiModel) -> Unit
-) {
+fun AIRecommendationsScreen(navController: NavController) {
+    val context = LocalContext.current
+    val prefManager = remember { PrefManager(context) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-            .verticalScroll(rememberScrollState())
-    ) {
+    var jobs by remember { mutableStateOf<List<JobUiModel>>(emptyList()) }
+    var loading by remember { mutableStateOf(true) }
+    var error by remember { mutableStateOf<String?>(null) }
 
-        /* ---------------- TOP BAR ---------------- */
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(Icons.Default.ArrowBack, contentDescription = null)
-            Spacer(Modifier.width(12.dp))
-            Text(
-                text = "AI Recommendations",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(Modifier.weight(1f))
-            Icon(Icons.Default.NotificationsNone, contentDescription = null)
+    LaunchedEffect(Unit) {
+        val token = prefManager.getToken()
+        if (token.isNullOrBlank()) {
+            error = "Please login again"
+            loading = false
+            return@LaunchedEffect
         }
 
-        /* ---------------- INFO CARD ---------------- */
+        Log.d("AI_RECOMMEND_API_REQUEST", "Requesting recommendations")
 
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            shape = RoundedCornerShape(14.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F7FF))
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = "How it works",
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1E88FF)
+        ApiClient.retrofit.create(ApiService::class.java)
+            .getRecommendedJobs("Bearer $token")
+            .enqueue(object : Callback<RecommendedJobsResponse> {
+
+                override fun onResponse(
+                    call: Call<RecommendedJobsResponse>,
+                    response: Response<RecommendedJobsResponse>
+                ) {
+                    loading = false
+
+                    if (!response.isSuccessful || response.body()?.status != true) {
+                        error = "No recommendations found"
+                        Log.e("AI_RECOMMEND_API_FAILURE", "Failed to fetch recommendations: ${response.message()}")
+                        return
+                    }
+
+                    val responseJobs = response.body()!!.jobs
+                    if (responseJobs.isEmpty()) {
+                         Log.d("AI_RECOMMEND_API_EMPTY", "No recommended jobs found")
+                         jobs = emptyList()
+                    } else {
+                        Log.d("AI_RECOMMEND_API_SUCCESS", "Fetched ${responseJobs.size} recommended jobs")
+                        jobs = responseJobs.map {
+                            JobUiModel(
+                                id = it.id.toString(),
+                                title = it.title ?: "Unknown Title",
+                                company = it.company_name ?: "Unknown Company",
+                                location = it.location ?: "Remote",
+                                salary = if (it.salary_min != null && it.salary_max != null) "₹${it.salary_min} - ₹${it.salary_max}" else "Negotiable",
+                                description = it.required_skills ?: "",
+                                latitude = it.latitude?.toDoubleOrNull() ?: 0.0,
+                                longitude = it.longitude?.toDoubleOrNull() ?: 0.0
+                            )
+                        }
+                    }
+                }
+
+                override fun onFailure(call: Call<RecommendedJobsResponse>, t: Throwable) {
+                    loading = false
+                    error = t.localizedMessage ?: "Network error"
+                    Log.e("AI_RECOMMEND_API_FAILURE", "Network error: ${t.message}")
+                }
+            })
+    }
+
+    Scaffold(
+        topBar = {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.White)
+                    .padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
+                    modifier = Modifier.clickable { navController.popBackStack() }
                 )
-                Spacer(Modifier.height(6.dp))
-                Text(
-                    text = "Our AI analyzes your skills, experience, and preferences to find jobs that match your profile. The higher the match percentage, the better the job fits your qualifications.",
-                    fontSize = 13.sp,
-                    color = Color.DarkGray
-                )
+                Spacer(Modifier.width(12.dp))
+                Text("AI Recommendations", fontSize = 18.sp, fontWeight = FontWeight.Bold)
             }
         }
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White)
+                .padding(paddingValues)
+        ) {
+            when {
+                loading -> Box(
+                    Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) { CircularProgressIndicator() }
 
-        Spacer(Modifier.height(20.dp))
+                error != null -> Box(
+                    Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) { Text(error!!, color = Color.Red) }
 
-        /* ---------------- SECTION TITLE ---------------- */
+                jobs.isEmpty() -> Box(
+                     Modifier.fillMaxSize(),
+                     contentAlignment = Alignment.Center
+                ) { Text("No recommendations yet") }
 
-        Text(
-            text = "Top Matches for You",
-            modifier = Modifier.padding(horizontal = 16.dp),
-            fontWeight = FontWeight.Bold,
-            fontSize = 16.sp
-        )
+                else -> LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = 16.dp)
+                ) {
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F7FF))
+                        ) {
+                            Column(Modifier.padding(16.dp)) {
+                                Text("How it works", fontWeight = FontWeight.Bold, color = Color(0xFF1E88FF))
+                                Spacer(Modifier.height(6.dp))
+                                Text(
+                                    "Jobs are ranked based on your saved skills and preferences.",
+                                    fontSize = 13.sp
+                                )
+                            }
+                        }
+                    }
 
-        Spacer(Modifier.height(12.dp))
-
-        /* ---------------- JOB LIST ---------------- */
-
-        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-
-            AIJobItem(
-                title = "UX Designer",
-                company = "Tech Solutions Inc.",
-                location = "New York, NY",
-                salary = "$80K - $100K",
-                time = "2 days ago",
-                match = "95% Match",
-                onClick = {
-                    onJobClick(
-                        JobUiModel(
-                            id = "21",
-                            title = "UX Designer",
-                            company = "Tech Solutions Inc.",
-                            location = "New York, NY",
-                            salary = "$80K - $100K",
-                            description = "AI matched role based on your UX skills."
-                        )
-                    )
+                    items(jobs) { job ->
+                        RecommendationItem(job) {
+                            // navController.navigate(...) or other actions
+                        }
+                    }
                 }
-            )
-
-            AIJobItem(
-                title = "Frontend Developer",
-                company = "Digital Innovations",
-                location = "Remote",
-                salary = "$90K - $110K",
-                time = "1 day ago",
-                match = "90% Match",
-                onClick = {
-                    onJobClick(
-                        JobUiModel(
-                            id = "22",
-                            title = "Frontend Developer",
-                            company = "Digital Innovations",
-                            location = "Remote",
-                            salary = "$90K - $110K",
-                            description = "High frontend skill match."
-                        )
-                    )
-                }
-            )
-
-            AIJobItem(
-                title = "UI/UX Designer",
-                company = "Design Studio",
-                location = "Remote",
-                salary = "$75K - $95K",
-                time = "1 week ago",
-                match = "85% Match",
-                onClick = {
-                    onJobClick(
-                        JobUiModel(
-                            id = "23",
-                            title = "UI/UX Designer",
-                            company = "Design Studio",
-                            location = "Remote",
-                            salary = "$75K - $95K",
-                            description = "Strong UI/UX alignment with your profile."
-                        )
-                    )
-                }
-            )
-
-            AIJobItem(
-                title = "UI Developer",
-                company = "Tech Innovators",
-                location = "Boston, MA",
-                salary = "$90K - $110K",
-                time = "3 days ago",
-                match = "82% Match",
-                onClick = {
-                    onJobClick(
-                        JobUiModel(
-                            id = "24",
-                            title = "UI Developer",
-                            company = "Tech Innovators",
-                            location = "Boston, MA",
-                            salary = "$90K - $110K",
-                            description = "Good UI development role match."
-                        )
-                    )
-                }
-            )
+            }
         }
-
-        Spacer(Modifier.height(24.dp))
     }
 }
 
-/* ================================================= */
-/* ================= JOB ITEM ======================= */
-/* ================================================= */
-
 @Composable
-private fun AIJobItem(
-    title: String,
-    company: String,
-    location: String,
-    salary: String,
-    time: String,
-    match: String,
-    onClick: () -> Unit
-) {
+private fun RecommendationItem(job: JobUiModel, onClick: (JobUiModel) -> Unit) {
     Card(
         modifier = Modifier
+            .padding(horizontal = 16.dp, vertical = 8.dp)
             .fillMaxWidth()
-            .padding(vertical = 8.dp)
-            .clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF9F9F9))
+            .clickable { onClick(job) },
+        shape = RoundedCornerShape(16.dp)
     ) {
-
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Row(Modifier.padding(16.dp)) {
 
             Box(
                 modifier = Modifier
@@ -213,49 +185,23 @@ private fun AIJobItem(
                     .background(Color(0xFFEFEFEF), RoundedCornerShape(10.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.Work, contentDescription = null)
+                Icon(Icons.Default.Work, null)
             }
 
             Spacer(Modifier.width(12.dp))
 
-            Column(modifier = Modifier.weight(1f)) {
-
-                Text(title, fontWeight = FontWeight.Bold)
-                Text(company, fontSize = 13.sp, color = Color.Gray)
-
-                Spacer(Modifier.height(6.dp))
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.LocationOn, null, Modifier.size(14.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text(location, fontSize = 12.sp)
-                }
-
-                Spacer(Modifier.height(6.dp))
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.AttachMoney, null, Modifier.size(14.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text(salary, fontSize = 12.sp)
-
-                    Spacer(Modifier.width(12.dp))
-
-                    Icon(Icons.Default.AccessTime, null, Modifier.size(14.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text(time, fontSize = 12.sp)
-                }
+            Column(Modifier.weight(1f)) {
+                Text(job.title, fontWeight = FontWeight.Bold)
+                Text(job.company, fontSize = 13.sp, color = Color.Gray)
+                Text(job.location, fontSize = 12.sp)
             }
 
-            Surface(
-                shape = CircleShape,
-                color = Color(0xFF1E88FF)
-            ) {
+            Surface(shape = CircleShape, color = Color(0xFF1E88FF)) {
                 Text(
-                    text = match,
+                    "MATCH",
                     color = Color.White,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                    modifier = Modifier.padding(8.dp),
+                    fontSize = 12.sp
                 )
             }
         }

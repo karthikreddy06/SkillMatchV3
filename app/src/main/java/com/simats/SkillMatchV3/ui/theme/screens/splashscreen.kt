@@ -7,6 +7,7 @@ import androidx.navigation.NavHostController
 import com.simats.SkillMatchV3.navigation.NavRoutes
 import com.simats.SkillMatchV3.utils.PrefManager
 import kotlinx.coroutines.delay
+import java.util.Locale
 
 @Composable
 fun SplashScreen(navController: NavHostController) {
@@ -19,20 +20,22 @@ fun SplashScreen(navController: NavHostController) {
 
         if (prefManager.isLoggedIn()) {
 
-            when (prefManager.getRole()) {
+            val role = prefManager.getRole()?.lowercase(Locale.ROOT) ?: ""
+
+            // ✅ FIXED: Simple, direct check. No more file paths.
+            when (role) {
+                "employer" -> {
+                    navController.navigate(NavRoutes.EMPLOYER_ROOT) {
+                        popUpTo(NavRoutes.SPLASH) { inclusive = true }
+                    }
+                }
                 "seeker" -> {
                     navController.navigate(NavRoutes.SEEKER_ROOT) {
                         popUpTo(NavRoutes.SPLASH) { inclusive = true }
                     }
                 }
-
-                "employer" -> {
-                    navController.navigate(NavRoutes.EMPLOYER_HOME) {
-                        popUpTo(NavRoutes.SPLASH) { inclusive = true }
-                    }
-                }
-
                 else -> {
+                    // Fallback if role is unknown/corrupted
                     navController.navigate(NavRoutes.LOGIN) {
                         popUpTo(NavRoutes.SPLASH) { inclusive = true }
                     }

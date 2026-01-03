@@ -1,4 +1,3 @@
-// ✅ PACKAGE — keep this EXACT everywhere
 package com.simats.SkillMatchV3.ui.theme.screens.seeker.profile
 
 import androidx.compose.foundation.layout.*
@@ -9,11 +8,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 
 @Composable
-fun EditProfileScreen(
-    onBack: () -> Unit   // ✅ CORRECT: no NavController here
-) {
+fun EditProfileScreen(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -42,7 +40,7 @@ fun EditProfileScreen(
         Spacer(Modifier.height(24.dp))
 
         Button(
-            onClick = onBack, // ✅ SAFE navigation
+            onClick = { navController.popBackStack() },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(14.dp)
         ) {

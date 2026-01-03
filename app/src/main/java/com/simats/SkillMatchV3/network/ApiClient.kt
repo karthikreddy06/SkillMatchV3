@@ -5,8 +5,9 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object ApiClient {
 
-    // ✅ MUST include :8080
-    private const val BASE_URL = "http://10.0.2.2:8080/skillmatch/"
+    // ✅ FIXED: Physical device must use PC LAN IP
+    // Your PC IP from ipconfig = 10.68.202.44
+    private const val BASE_URL = "http://10.68.202.44:8080/skillmatch/"
 
     val retrofit: Retrofit by lazy {
         Retrofit.Builder()

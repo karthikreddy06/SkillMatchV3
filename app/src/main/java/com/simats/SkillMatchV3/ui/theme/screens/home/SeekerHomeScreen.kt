@@ -1,6 +1,7 @@
 package com.simats.SkillMatchV3.ui.theme.screens.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -17,24 +18,18 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import com.simats.SkillMatchV3.navigation.NavRoutes
 
 @Composable
-fun SeekerHomeScreen(
-    onFindJobsNearby: () -> Unit,
-    onSavedJobs: () -> Unit,
-    onAppliedJobs: () -> Unit,
-    onAIRecommendations: () -> Unit
-) {
-
+fun SeekerHomeScreen(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF6F7FB))
             .verticalScroll(rememberScrollState())
     ) {
-
-        /* ---------------- HEADER ---------------- */
-
+        // HEADER
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -42,7 +37,6 @@ fun SeekerHomeScreen(
                 .padding(20.dp)
         ) {
             Column {
-
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -59,7 +53,9 @@ fun SeekerHomeScreen(
                     }
 
                     Surface(
-                        modifier = Modifier.size(36.dp),
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clickable { navController.navigate(NavRoutes.SEEKER_PROFILE) },
                         shape = CircleShape,
                         color = Color.White.copy(alpha = 0.2f)
                     ) {
@@ -69,104 +65,117 @@ fun SeekerHomeScreen(
                     }
                 }
 
-                Spacer(Modifier.height(16.dp))
+                Spacer(Modifier.height(20.dp))
 
-                OutlinedTextField(
-                    value = "",
-                    onValueChange = {},
-                    placeholder = { Text("Search jobs, companies...") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color.White, RoundedCornerShape(14.dp)),
-                    leadingIcon = {
-                        Icon(Icons.Default.Search, null)
-                    },
-                    singleLine = true
-                )
+                // SEARCH BAR VISUAL
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color.White
+                ) {
+                    Row(
+                        modifier = Modifier.padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(Icons.Default.Search, null, tint = Color.Gray)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Search jobs, companies...", color = Color.Gray)
+                    }
+                }
             }
         }
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(20.dp))
 
-        /* ---------------- QUICK ACTIONS ---------------- */
-
+        // QUICK ACTIONS
         Column(Modifier.padding(horizontal = 16.dp)) {
+            Text(
+                "Quick Actions",
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                ActionCard(
-                    "Find Jobs\nNearby",
-                    Icons.Default.LocationOn,
-                    Color(0xFFE3F2FD),
-                    onFindJobsNearby
+                HomeActionCard(
+                    title = "Find Jobs\nNearby",
+                    icon = Icons.Default.LocationOn,
+                    color = Color(0xFFE3F2FD),
+                    onClick = { navController.navigate(NavRoutes.MAP) }
                 )
-                ActionCard(
-                    "AI\nRecommendations",
-                    Icons.Default.Lightbulb,
-                    Color(0xFFE8F5E9),
-                    onAIRecommendations
+                HomeActionCard(
+                    title = "AI\nRecommendations",
+                    icon = Icons.Default.AutoAwesome,
+                    color = Color(0xFFE8F5E9),
+                    onClick = { navController.navigate(NavRoutes.AI_RECOMMENDATIONS) }
                 )
             }
 
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(16.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                ActionCard(
-                    "Saved\nJobs",
-                    Icons.Default.Bookmark,
-                    Color(0xFFFFF8E1),
-                    onSavedJobs
+                HomeActionCard(
+                    title = "Saved\nJobs",
+                    icon = Icons.Default.Bookmark,
+                    color = Color(0xFFFFF8E1),
+                    onClick = { navController.navigate(NavRoutes.SEEKER_SAVED_JOBS) }
                 )
-                ActionCard(
-                    "Applied\nJobs",
-                    Icons.Default.CheckCircle,
-                    Color(0xFFF3E5F5),
-                    onAppliedJobs
+                HomeActionCard(
+                    title = "Applied\nJobs",
+                    icon = Icons.Default.WorkHistory,
+                    color = Color(0xFFF3E5F5),
+                    onClick = { navController.navigate(NavRoutes.SEEKER_APPLIED_JOBS) }
                 )
             }
         }
-
+        
         Spacer(Modifier.height(24.dp))
     }
 }
 
-/* ---------------- ACTION CARD ---------------- */
-
 @Composable
-private fun ActionCard(
+fun HomeActionCard(
     title: String,
     icon: ImageVector,
-    bg: Color,
+    color: Color,
     onClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth(0.48f)
-            .height(110.dp),
+            .height(110.dp)
+            .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        onClick = onClick
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(12.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+                .padding(16.dp),
+            verticalArrangement = Arrangement.SpaceBetween,
+            horizontalAlignment = Alignment.Start
         ) {
             Box(
                 modifier = Modifier
-                    .size(36.dp)
-                    .background(bg, CircleShape),
+                    .size(40.dp)
+                    .background(color, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(icon, null)
+                Icon(icon, null, tint = Color.Black.copy(alpha = 0.7f))
             }
-            Text(title, fontWeight = FontWeight.Medium)
+            Text(
+                text = title,
+                fontWeight = FontWeight.Medium,
+                fontSize = 14.sp,
+                lineHeight = 18.sp
+            )
         }
     }
 }
